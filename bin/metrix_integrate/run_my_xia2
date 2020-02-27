@@ -1,0 +1,6 @@
+#!/bin/env python3
+
+from modules.metrix_integrate import my_xia2
+
+if __name__=='__main__':
+  my_xia2.run()

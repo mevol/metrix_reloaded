@@ -1,0 +1,10 @@
+setup.py
+bin/metrix_integrate/run_my_xia2
+metrix_reloaded.egg-info/PKG-INFO
+metrix_reloaded.egg-info/SOURCES.txt
+metrix_reloaded.egg-info/dependency_links.txt
+metrix_reloaded.egg-info/not-zip-safe
+metrix_reloaded.egg-info/requires.txt
+metrix_reloaded.egg-info/top_level.txt
+modules/metrix_integrate/__init__.py
+modules/metrix_integrate/my_xia2.py
