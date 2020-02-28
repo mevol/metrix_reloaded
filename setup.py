@@ -12,10 +12,15 @@ setup(
     author_email="melanie.vollmar@diamond.ac.uk",
     packages=["modules",
               "modules.metrix_integrate",
+              "modules.metrix_phase",
               "modules.metrix_db",
               "modules.metrix_ml"],
     install_requires=[
          "procrunner",
+         "pybind11",
+         "Gemmi",
+         "biopython"
+         
 #        "tensorflow-gpu<=1.13",
 #        "Keras",
 #        "Pillow",
@@ -29,7 +34,8 @@ setup(
 #        "configargparse",
     ],
     scripts=[
-            "bin/metrix_integrate/run_my_xia2"],
+            "bin/metrix_integrate/run_my_xia2",
+            "bin/metrix_phase/run_my_ep"],
     
 #    entry_points={
 #        "console_scripts": [
