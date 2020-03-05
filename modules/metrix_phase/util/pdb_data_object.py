@@ -1,8 +1,7 @@
 #!/usr/bin/env ccp4-python
 
-from __future__ import division
-
-
+import os
+import gemmi
 
 class PdbData(object):
   '''Store items of interest from a PDB search model; this does not work with
@@ -11,9 +10,6 @@ class PdbData(object):
      needs fixing; does not include nucleic acids at the moment'''
   
   def __init__(self, filename):
-    import os.path
-    from iotbx import pdb
-    
     #check file exists and is a PDB file
     if filename is None:
   	  raise RuntimeError('Need to specify xyzin filename')
@@ -23,21 +19,19 @@ class PdbData(object):
     #describe hierarchy of a PDB file which defines it as model-chain-conformer
     #of aa; get sequence of it and check length of sequence and find chain which
     #is longest and isolate it as search model
-    self.pdb_obj = pdb.input(file_name=filename)
-    hierarchy = self.pdb_obj.construct_hierarchy()
+
     longest = 0
     self.fasta = None
     self.seq = None
-    for model in hierarchy.models():
-      for chain in model.chains():
-        for conformer in chain.conformers():
-          try:
-	        seqlen = len(conformer.as_padded_sequence())
-          except IndexError:
-            continue
-          if seqlen > longest:
-            longest = seqlen
-            self.fasta = conformer.format_fasta()
-            self.seq = conformer.as_padded_sequence()
-            self.chainid = chain.id   
+
+    structure = gemmi.read_structure(filename)
+    structure.setup_entities()
+    for model in structure:
+      for chain in model:
+        name = chain.name
+        polymer = model[name].get_polymer()
+        seqlen = len(polymer)
+        if seqlen > longest:
+          self.seq = polymer.make_one_letter_sequence()
+    
     return

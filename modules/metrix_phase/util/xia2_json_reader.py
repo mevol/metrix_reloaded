@@ -5,6 +5,7 @@ import sys
 from math import ceil
 import procrunner
 import gemmi
+import os
 #from cctbx.eltbx import henke as table_module
 #from iotbx import mtz
 
@@ -38,7 +39,7 @@ class xia2_json_reader(object):
       
 
       self.scaled_mtz = str(self.crystals[name]['_scaler']['_scalr_scaled_reflection_files']['mtz'])
-#      print(self.scaled_mtz)
+      print("My MTZ", self.scaled_mtz)
 #    
 #      mtz = gemmi.read_mtz_file(self.scaled_mtz)    
 #    mtz_obj = mtz.object(self.scaled_mtz)
@@ -50,7 +51,7 @@ class xia2_json_reader(object):
                          'wavelength':v['_wavelength']} \
         for k, v in self.crystals[name]['_wavelengths'].items()]
       self.wavelengths = sorted(self.wavelengths, key=lambda d: d['wavelength'])
-#      print(self.wavelengths)
+      print(self.wavelengths)
 
       # include paths to unmerged sca files
       sca = self.crystals[name]['_scaler']['_scalr_scaled_reflection_files']['sca']
@@ -91,9 +92,11 @@ class xia2_json_reader(object):
       __location__ = os.path.realpath(os.path.join(os.getcwd(),
                                       os.path.dirname(__file__)))
       crossec_shell = os.path.join(__location__,
-                                   "util/shell_scripts/crossec.sh")
+                                   "shell_scripts/crossec.sh")
 
-      result = procrunner.run(["crossec"],
+      print(0000000000, crossec_shell)
+
+      result = procrunner.run(["/bin/bash", crossec_shell],
                               stdin=keywords.encode('utf-8'),
                               print_stdout=False)
 

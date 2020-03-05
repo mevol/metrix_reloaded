@@ -1,0 +1,6 @@
+#!/bin/env python3
+
+from modules.metrix_phase import my_mr
+
+if __name__=='__main__':
+  my_mr.run()

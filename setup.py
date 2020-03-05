@@ -35,7 +35,8 @@ setup(
     ],
     scripts=[
             "bin/metrix_integrate/run_my_xia2",
-            "bin/metrix_phase/run_my_ep"],
+            "bin/metrix_phase/run_my_ep",
+            "bin/metrix_phase/run_my_mr"],
     
 #    entry_points={
 #        "console_scripts": [

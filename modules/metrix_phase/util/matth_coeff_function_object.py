@@ -23,30 +23,26 @@ class MattCoeff(object):
                      '''
 
     cell_n = tuple(re.findall(r'\d+(?:.\d+)?', str(cell)))
-    sg_n = tuple(re.findall(r'"(.*?)"', str(sg)))
-    fmt = (mw,) + cell_n + sg_n
+    fmt = (mw,) + cell_n + (sg,)
     keywords = keywords_matth.format(*fmt)
     
-    print(keywords)
-
     __location__ = os.path.realpath(os.path.join(os.getcwd(),
                                     os.path.dirname(__file__)))
-                                    
-    matt_coeff = os.path.join(__location__, "util/shell_scripts/matt_coeff.sh")
-
-
-    self.matt_log = procrunner.run(matt_coeff,
-                                   stdin=keywords.encode('utf-8'),
-                                   print_stdout=False)
-
+                                                                       
+    matt_coeff = os.path.join(__location__, "shell_scripts", "matt_coeff.sh")
+    
+    self.matt_log = procrunner.run(['/bin/bash', matt_coeff],
+                                   stdin=keywords.encode('utf-8'))
+                                   
     self.extract_table()
 
   def extract_table(self):
     '''Extract the table of values from the log text'''
-
+    output = self.matt_log["stdout"].decode("utf-8")
+    output = output.splitlines()
     in_table = False
     table = []
-    for line in self.matt_log:
+    for line in output:
       if line.strip() == "_" * 48:
         in_table = not in_table
       elif in_table:
@@ -55,6 +51,7 @@ class MattCoeff(object):
     self._table_lines = []
     for line in table:
       vals = [float(v) for v in line.split()]
+      
       self._table_lines.append({
         'nmol_per_asu':vals[0],
         'coefficient':vals[1],
@@ -96,7 +93,7 @@ def matt_coeff_factory(hklin, seqin):
   matt_obj = MattCoeff(seqdata.mol_weight(),
                        mtzdata.cell,
                        mtzdata.sg_num,
-                       hklin)
+                       mtzdata.mtz_file)
   
   return matt_obj
 

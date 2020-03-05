@@ -31,7 +31,7 @@ from xia2_json_reader import xia2_json_reader
 from mtz_data_object import MtzData
 from seq_data_object import SeqData
 from matth_coeff_function_object import MattCoeff, matt_coeff_factory
-#from generate_possible_spacegroups import generate_chiral_spacegroups_unique#, \
+from generate_possible_spacegroups import generate_chiral_spacegroups_unique#, \
 #     spacegroup_enantiomorph, spacegroup_full, sanitize_spacegroup
 
 # Function stolen from fast_ep...
@@ -166,9 +166,13 @@ if __name__ == '__main__':
   x2j = os.path.join(args.xia2dir, 'xia2.json')
   if not os.path.exists(x2j):
     raise RuntimeError('%s does not exist' % x2j)
-
+  
   # Extract data from xia2.json
   x2_dat = xia2_json_reader(x2j)
+
+  # Find scaled mtz
+  scaled_mtz = x2_dat.scaled_mtz
+  #print(3333, scaled_mtz)
 
   # Try to identify the wavelengths given the chosen scatterer
   x2_dat.identify_wavelengths(args.atom)
@@ -185,7 +189,7 @@ if __name__ == '__main__':
     seqdata = SeqData(args.seqin)
     num_met = seqdata.num_methionin()
     print("Num Met: ", num_met)
-    matt_coeff = matt_coeff_factory(x2_dat.scaled_mtz, args.seqin)
+    matt_coeff = matt_coeff_factory(scaled_mtz, args.seqin)
 
     # Set 'find' if SeMet
     if args.atom.upper() == "SE":

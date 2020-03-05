@@ -2,6 +2,7 @@
 
 import os.path
 import gemmi
+import re
 
 class MtzData(object):
   '''Store items of interest from an MTZ file; this makes unit cell, space group
@@ -15,9 +16,20 @@ class MtzData(object):
       raise RuntimeError('%s does not exist' % filename)
     self.mtz_file = gemmi.read_mtz_file(filename)
     
-    self.sg_num = self.mtz_file.spacegroup
-    fcols = self.mtz_file.columns_with_type("F")
-    qcols = self.mtz_file.columns_with_type("Q")[0]
+    self.sg_num = self.mtz_file.spacegroup.number
+    
+    f = self.mtz_file.columns_with_type("F")
+    f = re.findall(r'[A-Z]+', str(f))
+    if "F" in f:
+      f = "F"
+      self.fcols = f
+
+    q = self.mtz_file.columns_with_type("Q")
+    q = re.findall(r'[A-Z]+', str(q))
+    if "SIGF" in q:
+      q = "SIGF"
+      self.qcols = q
+
     self.cell = self.mtz_file.cell
     
     return
