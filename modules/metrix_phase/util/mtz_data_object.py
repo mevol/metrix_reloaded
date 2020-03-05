@@ -20,13 +20,19 @@ class MtzData(object):
     
     f = self.mtz_file.columns_with_type("F")
     f = re.findall(r'[A-Z]+', str(f))
-    if "F" in f:
+    if "F" and "WAVE" in f:
+      f = "F_WAVE1"
+      self.fcols = f
+    else:
       f = "F"
       self.fcols = f
 
     q = self.mtz_file.columns_with_type("Q")
     q = re.findall(r'[A-Z]+', str(q))
-    if "SIGF" in q:
+    if "SIGF" and "WAVE" in q:
+      q = "SIGF_WAVE1"
+      self.qcols = q
+    else:
       q = "SIGF"
       self.qcols = q
 

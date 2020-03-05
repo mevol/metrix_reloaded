@@ -21,6 +21,11 @@ def simpleMR(xyzin, hklin, seqin, mode):
   
   #load sequence of target molecule
   seqdata = SeqData(seqin)
+  print(seqdata.seq)
+  with open("temp.seq", "w") as temp:
+    temp.write(str(seqdata.seq))
+  seq = "temp.seq"
+  print(seq)
   
   #determine molecular weight of target from sequence
   mw = seqdata.mol_weight()
@@ -40,7 +45,7 @@ def simpleMR(xyzin, hklin, seqin, mode):
   #determined above; use provided search model
   phaser_obj = PhaserSearch(xyzin,
                             hklin,
-                            seqin,
+                            seq,
                             mtzdata.fcols,
                             mtzdata.qcols,
                             nmol,

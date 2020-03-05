@@ -58,7 +58,7 @@ def parse_command_line():
     type=str,
     dest='mode',
     default='AUTO',
-    help='Specify Phaser run mode; AUTO for full space group search; MR_ELLG for eLLG calculation')
+    help='Specify Phaser run mode; MR_AUTO for full space group search; MR_ELLG for eLLG calculation')
     
   parser.add_argument(
     '--output_dir',
