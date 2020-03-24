@@ -1,4 +1,4 @@
-#!/usr/bin/env ccp4-python
+#!/bin/env python3
 
 import os
 import gemmi

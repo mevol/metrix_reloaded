@@ -39,7 +39,7 @@ class xia2_json_reader(object):
       
 
       self.scaled_mtz = str(self.crystals[name]['_scaler']['_scalr_scaled_reflection_files']['mtz'])
-      print("My MTZ", self.scaled_mtz)
+      #print("My MTZ", self.scaled_mtz)
 #    
 #      mtz = gemmi.read_mtz_file(self.scaled_mtz)    
 #    mtz_obj = mtz.object(self.scaled_mtz)
@@ -51,7 +51,7 @@ class xia2_json_reader(object):
                          'wavelength':v['_wavelength']} \
         for k, v in self.crystals[name]['_wavelengths'].items()]
       self.wavelengths = sorted(self.wavelengths, key=lambda d: d['wavelength'])
-      print(self.wavelengths)
+      #print(self.wavelengths)
 
       # include paths to unmerged sca files
       sca = self.crystals[name]['_scaler']['_scalr_scaled_reflection_files']['sca']

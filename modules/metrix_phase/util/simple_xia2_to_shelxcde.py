@@ -26,21 +26,22 @@ import sys
 import shutil
 import os
 import procrunner
+import gemmi
+import re
 from multiprocessing import Pool, Process
 from xia2_json_reader import xia2_json_reader
 from mtz_data_object import MtzData
 from seq_data_object import SeqData
 from matth_coeff_function_object import MattCoeff, matt_coeff_factory
-from generate_possible_spacegroups import generate_chiral_spacegroups_unique#, \
-#     spacegroup_enantiomorph, spacegroup_full, sanitize_spacegroup
+from generate_possible_spacegroups import generate  
 
 # Function stolen from fast_ep...
-def sanitize_spacegroup(spacegroup_name):
-  spacegroup_name.replace(' ','')
-  if not ':' in spacegroup_name:
-    return spacegroup_name
-  assert(spacegroup_name.startswith('R'))
-  return 'H%s' % spacegroup_name.split(':')[0][1:]
+#def sanitize_spacegroup(spacegroup_name):
+#  spacegroup_name.replace(' ','')
+#  if not ':' in spacegroup_name:
+#    return spacegroup_name
+#  assert(spacegroup_name.startswith('R'))
+#  return 'H%s' % spacegroup_name.split(':')[0][1:]
 
 def simpleSHELXC(name, cell, wavelengths, sg, find, ntry=1000):
   print("SHELXC")
@@ -51,17 +52,53 @@ def simpleSHELXC(name, cell, wavelengths, sg, find, ntry=1000):
   for w in wavelengths:
     label = w['label']
     sca = os.path.relpath(w['sca'])
-    keywords.append("{0} {1}".format(label, sca))
+    
+    keywords = '''
+               {1} {2}
+               CELL {3} {4} {5} {6} {7} {8}
+               SPAG {9}
+               FIND {10}
+               NTRY {11}
+               '''
+    cell_n = tuple(re.findall(r'\d+(?:.\d+)?', str(cell)))
+    
+    print(cell_n)
+    
+    fmt = (name,) + (label,) + (sca,) + cell_n + (sg,) + (find,) + (ntry,)
+    
+    keywords = keywords.format(*fmt)
   
-  keywords.append(('cell ' + '{} '*6).format(*cell))
-  keywords.append('spag ' + sanitize_spacegroup(sg))
-  keywords.append('find {}'.format(find))
-  keywords.append('ntry {}'.format(ntry))
+  print(keywords)
+  
+  with open("shelxc.inp", "w") as output:
+    output.write(keywords) 
 
+  __location__ = os.path.realpath(os.path.join(os.getcwd(),
+                                  os.path.dirname(__file__)))
+  shelx = os.path.join(__location__,
+                               "shell_scripts/shelx.sh")
+                               
+  #print(os.getcwd())
+#
+#  script = os.path.join(os.getcwd(), "shelxc.inp")
+#  print(script)
   
-  result = procrunner.run(["shelxc"],
-           stdin=keywords.encode('utf-8'),
-           print_stdout=False)
+  with open("shelxc.inp", "r") as shelxc_input:
+    
+  
+    result = procrunner.run(["/bin/bash", shelx, name, shelxc_input],
+           #stdin=keywords.encode("utf-8"),
+           print_stdout=True)
+           
+  print(result)
+  
+  out = result["stdout"].decode("utf-8")
+  
+  print(result["stdout"].decode("utf-8"))
+  
+  with open("shelxc.log", "w") as output:
+    output.write(out)                          
+
   return result
 
 def simpleSHELXD(name):
@@ -176,6 +213,7 @@ if __name__ == '__main__':
 
   # Try to identify the wavelengths given the chosen scatterer
   x2_dat.identify_wavelengths(args.atom)
+  print(x2_dat.identify_wavelengths(args.atom))
 
   # If we have the sequence, make SeqData and MattCoeff objects to calculate various
   # quantities
@@ -188,14 +226,14 @@ if __name__ == '__main__':
   else:
     seqdata = SeqData(args.seqin)
     num_met = seqdata.num_methionin()
-    print("Num Met: ", num_met)
+#    print("Num Met: ", num_met)
     matt_coeff = matt_coeff_factory(scaled_mtz, args.seqin)
 
     # Set 'find' if SeMet
     if args.atom.upper() == "SE":
       find = matt_coeff.num_molecules() * seqdata.num_methionin()
       #num_molecules = matt_coeff.num_molecules()
-      print("#MET per asu = ", find)
+      #print("#MET per asu = ", find)
       #print 'Num_molecules in ASU: %s \n' %num_molecules
     else:
       print("Sequence supplied, but the scatterer is not Se, so the number of "
@@ -203,25 +241,32 @@ if __name__ == '__main__':
 
   # copy .sca files locally and update the wavelengths dictionary
   wl = copy_sca_locally(x2_dat.wavelengths)
+  #print(wl)
   
   # determine spacegroups for pointgroup
-  space_groups = generate_chiral_spacegroups_unique(x2_dat.sg_name)
+  print(6666666666, x2_dat.sg_name)
+  #gemmi_sg = gemmi.SpaceGroup(x2_dat.sg_name)
+  #print(gemmi_sg)
+  space_groups = generate(gemmi.SpaceGroup(x2_dat.sg_name))
+  
+  print(7777777, space_groups)
 
   cwd = os.path.normpath(os.getcwd())
   cfom = []
   c_output = []
   for sg in space_groups:
-    print("Trying {0} \n").format(sg)
+    sg_str = str(sg)
+    sg_str = str(sg_str).strip('<gemmi.SpaceGroup("')
+    sg_str = str(sg_str).strip('")>')
+    sg_str = "".join(sg_str.split())
+    print("Trying {0} \n".format(sg_str))
     os.chdir(cwd)
-    if not os.path.exists(sg): os.mkdir(sg)
-    os.chdir(sg)
+    if not os.path.exists(sg_str): os.mkdir(sg_str)
+    os.chdir(sg_str)
 
     # Run SHELXC
-#    c_output.append(simpleSHELXC(args.name, x2_dat.cell, wl,
-#      x2_dat.sg_name, find, ntry=1000))
-
     c_output.append(simpleSHELXC(args.name, x2_dat.cell, wl,
-      sg, find, args.ntry))
+      sg_str, find, args.ntry))
 
     # Run SHELXD
     d_output = simpleSHELXD(args.name)

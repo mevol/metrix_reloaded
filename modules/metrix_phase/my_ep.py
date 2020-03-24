@@ -74,7 +74,7 @@ def parse_command_line():
 
 def make_output_folder(output_dir):
   date = datetime.datetime.today().strftime('%Y%m%d')
-  date_dir = os.path.join(output_dir, "phasing_"+date)
+  date_dir = os.path.join(output_dir, "EP_phasing_"+date)
   os.makedirs(date_dir, exist_ok = True)
   return date_dir
 
