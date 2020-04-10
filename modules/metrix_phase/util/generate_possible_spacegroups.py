@@ -1,99 +1,38 @@
-#!/usr/bin/env python
-#
-# fast_ep ->
-#
-# Fast experimental phasing in the spirit of fast_dp, starting from nothing
-# and using brute force (and educated guesses) to get everything going.
-#
-# generate_chiral_spacegroups - generate lists of chiral spacegroups
-# for a given pointgroup.
-#
-# generate_chiral_spacegroups_unique - generate lists of chiral spacegroups
-# for a given pointgroup, counting enantiomorphs together (i.e. useful for
-# SAD substructure determination.)
-
-#from cctbx.sgtbx import space_group, space_group_symbols, \
-#     space_group_symbol_iterator
+#!/bin/env python3
 
 import gemmi
 
-#def spacegroup_enantiomorph(spacegroup_name):
-#    sg = space_group(space_group_symbols(spacegroup_name).hall())
-#    enantiomorph = sg.change_basis(sg.type().change_of_hand_op())
-#    return enantiomorph.type().lookup_symbol().replace(' ', '')
+ENANTIOMORPHIC = [76, 78, 91, 92, 95, 96, 144, 145, 151, 152, 153, 154,
+                  169, 170, 171, 172, 178, 179, 180, 181, 212, 213]
 
-def spacegroup_enantiomorph(spacegroup_name):
-    sg = gemmi.find_spacegroup_by_name(spacegroup_name)
-    print(sg)
-    enantiomorph = gemmi.Op(sg)
-    enantiomorph = _.inverse()
-    print(enantiomorph)
-    return enantiomorph
+def generate(spacegroup):
+    eu_list = []
+    pg_ops = spacegroup.operations()
+    pg_ops_list = []
+    centering = pg_ops.find_centering()
+    for op in pg_ops.sym_ops:
+        op.tran = [0, 0, 0]
+        pg_ops_list.append(op)
+    for sg in gemmi.spacegroup_table():
+        ops = sg.operations()
+        if ops.find_centering() != centering:
+            continue
+        ops_list = []
+        for op in ops.sym_ops:
+            op.tran = [0, 0, 0]
+            ops_list.append(op)
+        if set(pg_ops_list) == set(ops_list):
+            if sg.number in ENANTIOMORPHIC:
+                enant_ops = sg.operations()
+                enant_ops.change_basis(gemmi.Op('-x,-y,-z'))
+                if gemmi.find_spacegroup_by_ops(enant_ops) in eu_list:
+                    continue
+            eu_list.append(sg)
+        if sg.number == 230:
+            break
+#    print(eu_list)
+    for e in eu_list:
+        print(e, e.is_reference_setting(), e.number)
+    return eu_list
 
-
-#def spacegroup_full(spacegroup_name):
-#    return space_group(space_group_symbols(
-#        spacegroup_name).hall()).type().lookup_symbol()
-
-#def sanitize_spacegroup(spacegroup_name):
-#    if not ':' in spacegroup_name:
-#        return spacegroup_name
-#    assert(spacegroup_name.startswith('R'))
-#    return 'H%s' % spacegroup_name.split(':')[0][1:]
-
-#def generate_chiral_spacegroups_unique(pointgroup):
-#    sg = space_group(space_group_symbols(pointgroup).hall())
-#    pg = sg.build_derived_patterson_group()
-#
-#    eu_list = []
-#
-#    for j in space_group_symbol_iterator():
-#        sg_test = space_group(j)
-#
-#        if not sg_test.is_chiral():
-#            continue
-#
-#        pg_test = sg_test.build_derived_patterson_group()
-#        if pg_test == pg:
-#            enantiomorph = sg_test.change_basis(
-#                sg_test.type().change_of_hand_op())
-#            if not sg_test in eu_list and not \
-#               enantiomorph in eu_list:
-#                eu_list.append(sg_test)
-#
-#    return [
-#        sg_test.type().lookup_symbol().replace(' ', '') \
-#        for sg_test in eu_list]
-
-#def generate_chiral_spacegroups(pointgroup):
-#    sg = space_group(space_group_symbols(pointgroup).hall())
-#    pg = sg.build_derived_patterson_group()
-#
-#    sg_list = []
-#
-#    for j in space_group_symbol_iterator():
-#        sg_test = space_group(j)
-#
-#        if not sg_test.is_chiral():
-#            continue
-#
-#        pg_test = sg_test.build_derived_patterson_group()
-#        if pg_test == pg:
-#            if not sg_test in sg_list:
-#                sg_list.append(sg_test)
-#
-#    return [
-#        sg_test.type().lookup_symbol().replace(' ', '') \
-#        for sg_test in sg_list]
-
-#def test():
-#    assert(len(generate_chiral_spacegroups('P422')) == 8)
-#    assert(len(generate_chiral_spacegroups_unique('P422')) == 6)
-#    assert(len(generate_chiral_spacegroups('P222')) == 8)
-#    assert(generate_chiral_spacegroups('P222') == \
-#           generate_chiral_spacegroups_unique('P222'))
-
-    print('OK')
-
-if __name__ == '__main__':
-    test()
+#generate(gemmi.SpaceGroup('P 2 21 2'))

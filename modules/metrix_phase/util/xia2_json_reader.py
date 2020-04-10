@@ -51,7 +51,7 @@ class xia2_json_reader(object):
                          'wavelength':v['_wavelength']} \
         for k, v in self.crystals[name]['_wavelengths'].items()]
       self.wavelengths = sorted(self.wavelengths, key=lambda d: d['wavelength'])
-      #print(self.wavelengths)
+      print("xia2 wavelengths", self.wavelengths)
 
       # include paths to unmerged sca files
       sca = self.crystals[name]['_scaler']['_scalr_scaled_reflection_files']['sca']
@@ -66,7 +66,7 @@ class xia2_json_reader(object):
     #t=table_module.table(scatterer)
 
     if len(self.wavelengths) == 1:
-      self.wavelengths[0]['label'] = 'sad'
+      self.wavelengths[0]['label'] = 'SAD'
       return
 
     if len(self.wavelengths) > 4:
@@ -96,8 +96,8 @@ class xia2_json_reader(object):
 
       print(0000000000, crossec_shell)
 
-      result = procrunner.run(["/bin/bash", crossec_shell],
-                              stdin=keywords.encode('utf-8'),
+      result = procrunner.run(["crossec"],
+                              stdin=keywords_crossec.encode('utf-8'),
                               print_stdout=False)
 
       print(result)

@@ -28,7 +28,7 @@ import os
 import procrunner
 import gemmi
 import re
-from multiprocessing import Pool, Process
+#from multiprocessing import Pool, Process
 from xia2_json_reader import xia2_json_reader
 from mtz_data_object import MtzData
 from seq_data_object import SeqData
@@ -48,47 +48,148 @@ def simpleSHELXC(name, cell, wavelengths, sg, find, ntry=1000):
   print("======")
   # wavelengths should be be a dictionary with keys 'label' and 'sca'
   # prepare keywords
-  keywords = []
+  #keywords = []
+
+#  for w in wavelengths:
+#    label = w['label']
+#    sca = os.path.relpath(w['sca'])
+#    keywords.append("{0} {1}".format(label, sca))
+#    
+#  cell_n = tuple(re.findall(r'\d+(?:.\d+)?', str(cell)))
+#  print(cell_n)
+#
+#  cell_n_float = (float(cell_n[0]), float(cell_n[1]), float(cell_n[2]), float(cell_n[3]), float(cell_n[4]), float(cell_n[5]),)
+#  print(cell_n_float)
+#  
+#  cell_n_round = tuple(map(lambda x: isinstance(x, float) and round(x, 2) or x, cell_n_float))
+#  print(cell_n_round)  
+#
+#  keywords.append('cell {}'.format(cell))
+#  keywords.append('spag {}'.format(sg))
+#  keywords.append('find {}'.format(find))
+#  keywords.append('ntry {}'.format(ntry))
+#
+#  print(11111111, keywords)
+#
+#  result = procrunner.run(["shelxc", name],
+#           stdin=keywords.encode("utf-8"),
+#           print_stdout=True)
+
+
   for w in wavelengths:
-    label = w['label']
+    label = w['label'].upper()
     sca = os.path.relpath(w['sca'])
     
-    keywords = '''
-               {1} {2}
-               CELL {3} {4} {5} {6} {7} {8}
-               SPAG {9}
-               FIND {10}
-               NTRY {11}
-               '''
-    cell_n = tuple(re.findall(r'\d+(?:.\d+)?', str(cell)))
-    
+    print(label, sca)
+
+    cell_n = re.findall(r'\d+(?:.\d+)?', str(cell))
     print(cell_n)
     
-    fmt = (name,) + (label,) + (sca,) + cell_n + (sg,) + (find,) + (ntry,)
+    cell_n_round = [round(float(num), 2) for num in cell_n]
     
-    keywords = keywords.format(*fmt)
-  
-  print(keywords)
-  
-  with open("shelxc.inp", "w") as output:
-    output.write(keywords) 
+    print(1111111, cell_n_round)
+    
+    #cell_n_round = ''.join(str(cell_n_round))
+    
+    #print(cell_n_round)
+    
+#    for param in cell_n:
+#      param_round = round(float(param), 2)
+#      print(param_round)
+    
+#    cell_n_float = (float(cell_n[0]), float(cell_n[1]), float(cell_n[2]), float(cell_n[3]), float(cell_n[4]), float(cell_n[5]),)
+#    print(cell_n_float)
+    #cell_n_round = str(map(lambda x: isinstance(x, float) and round(x, 2) or x, cell_n_float))
+    #print(cell_n_round)
+    #fmt = label + sca + cell_n_round + sg + find + ntry
+    
+    #print(fmt)
 
-  __location__ = os.path.realpath(os.path.join(os.getcwd(),
-                                  os.path.dirname(__file__)))
-  shelx = os.path.join(__location__,
-                               "shell_scripts/shelx.sh")
+    keywords = """
+               {0} {1}
+               CELL {2} {3} {4} {5} {6} {7}
+               SPAG {8}
+               FIND {9}
+               NTRY {10}
+               """
+
+    keywords = keywords.format(label,
+                              sca,
+                              cell_n_round[0],
+                              cell_n_round[1],
+                              cell_n_round[2],
+                              cell_n_round[3],
+                              cell_n_round[4],
+                              cell_n_round[5],
+                              sg,
+                              find,
+                              ntry)
+  print(keywords)
+
+  result = procrunner.run(["shelxc", name],
+           stdin=keywords.encode("utf-8"),
+           print_stdout=True)
+
+    
+#  for w in wavelengths:
+#    label = w['label'].upper()
+#    sca = os.path.relpath(w['sca']) 
+#    
+#    keywords = '''
+#               {0} {1}
+#               CELL {2} {3} {4} {5} {6} {7}
+#               SPAG {8}
+#               FIND {9}
+#               NTRY {10}
+#               SFAC SE
+#               '''
+#    
+#    print(11111111, keywords)
+#    
+#    cell_n = tuple(re.findall(r'\d+(?:.\d+)?', str(cell)))
+#    
+#    print(cell_n)
+#    
+#    cell_n_float = (float(cell_n[0]), float(cell_n[1]), float(cell_n[2]), float(cell_n[3]), float(cell_n[4]), float(cell_n[5]),)
+#    
+#    print(cell_n_float)
+#    
+#    cell_n_round = tuple(map(lambda x: isinstance(x, float) and round(x, 2) or x, cell_n_float))
+#    
+#    print(cell_n_round)
+#    
+#    fmt = (label,) + (sca,) + cell_n_round + (sg,) + (find,) + (ntry,)
+#    
+#    keywords = keywords.format(*fmt)
+#  
+#    print(keywords)
+  
+  #with open("shelxc.inp", "w") as output:
+  #  output.write(keywords) 
+  #
+  #__location__ = os.path.realpath(os.path.join(os.getcwd(),
+  #                                os.path.dirname(__file__)))
+  #shelx = os.path.join(__location__,
+  #                             "shell_scripts/shelx.sh")
                                
   #print(os.getcwd())
 #
 #  script = os.path.join(os.getcwd(), "shelxc.inp")
 #  print(script)
   
-  with open("shelxc.inp", "r") as shelxc_input:
-    
+  #with open("shelxc.inp", "r") as shelxc_input:
+  #  
+  # 
+#    result = procrunner.run(["shelxc", name],
+#             stdin=keywords.encode("utf-8"),
+#             print_stdout=True)
   
-    result = procrunner.run(["/bin/bash", shelx, name, shelxc_input],
-           #stdin=keywords.encode("utf-8"),
-           print_stdout=True)
+  #shelx_name = name
+
+  #result = procrunner.run(["shelxc", shelx_name],
+  #      stdin=keywords.encode("utf-8"),
+  #      print_stdout=True)
+
            
   print(result)
   
@@ -239,9 +340,9 @@ if __name__ == '__main__':
       print("Sequence supplied, but the scatterer is not Se, so the number of "
             "sites will default to 10 anyway")
 
-  # copy .sca files locally and update the wavelengths dictionary
-  wl = copy_sca_locally(x2_dat.wavelengths)
-  #print(wl)
+#  # copy .sca files locally and update the wavelengths dictionary
+#  wl = copy_sca_locally(x2_dat.wavelengths)
+#  print(wl)
   
   # determine spacegroups for pointgroup
   print(6666666666, x2_dat.sg_name)
@@ -252,6 +353,9 @@ if __name__ == '__main__':
   print(7777777, space_groups)
 
   cwd = os.path.normpath(os.getcwd())
+  
+  print(88888888, cwd)
+  
   cfom = []
   c_output = []
   for sg in space_groups:
@@ -262,11 +366,32 @@ if __name__ == '__main__':
     print("Trying {0} \n".format(sg_str))
     os.chdir(cwd)
     if not os.path.exists(sg_str): os.mkdir(sg_str)
+
+#    print("********", os.getcwd())
+
+    # Run SHELXC
+ #   c_output.append(simpleSHELXC(args.name, x2_dat.cell, wl,
+ #     sg_str, find, args.ntry))
+      
+ #   print(c_output)
+    
+    
+    
     os.chdir(sg_str)
+    
+    print("********", os.getcwd())
+
+    # copy .sca files locally and update the wavelengths dictionary
+    wl = copy_sca_locally(x2_dat.wavelengths)
+    print(wl)
+
+
 
     # Run SHELXC
     c_output.append(simpleSHELXC(args.name, x2_dat.cell, wl,
       sg_str, find, args.ntry))
+      
+    print(c_output)
 
     # Run SHELXD
     d_output = simpleSHELXD(args.name)
@@ -294,9 +419,9 @@ if __name__ == '__main__':
   # Run SHELXE
   solvent_frac = 0.5 if matt_coeff is None else matt_coeff.solvent_fraction(
     matt_coeff.num_molecules())
-  #e_output_ori = simpleSHELXE(args.name, find, solvent_frac)
-  with Pool(processes = 2) as pool:
-    e_output_ori = pool.map(simpleSHELXE(args.name, find, solvent_frac))
+  e_output_ori = simpleSHELXE(args.name, find, solvent_frac)
+  #with Pool(processes = 2) as pool:
+  #  e_output_ori = pool.map(simpleSHELXE(args.name, find, solvent_frac))
 
   #use print to write things to standard out and then it will be dumped to log file
   #print 'Solvent fraction: %s' %solvent_frac
@@ -310,9 +435,9 @@ if __name__ == '__main__':
         if line.startswith('Best trace'): print(line)
   except IOError:
     pass
-  #e_output_inv = simpleSHELXE(args.name, find, solvent_frac, inverse_hand=True)
-  with Pool(processes = 2) as pool:
-    e_output_inv = pool.map(simpleSHELXE(args.name, find, solvent_frac, inverse_hand=True))
+  e_output_inv = simpleSHELXE(args.name, find, solvent_frac, inverse_hand=True)
+  #with Pool(processes = 2) as pool:
+  #  e_output_inv = pool.map(simpleSHELXE(args.name, find, solvent_frac, inverse_hand=True))
   #for line in e_output_inv:
   #  if line.startswith('Best trace'): print line
   try:
