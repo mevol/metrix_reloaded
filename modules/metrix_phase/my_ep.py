@@ -46,6 +46,13 @@ def parse_command_line():
     default='',
     help='Specify output directory')
 
+#  parser.add_argument(
+#    '--shelxe',
+#    type=str,
+#    dest='shelxe',
+#    default='',
+#    help='SHELXE type to run')
+
   parser.add_argument(
     '--processes',
     type=str,
@@ -105,13 +112,14 @@ class ExperimentalPhasing(object):
     __location__ = os.path.realpath(os.path.join(os.getcwd(),
                                     os.path.dirname(__file__)))
                                     
-    shelxcde = os.path.join(__location__, "util/simple_xia2_to_shelxcde.py")
+    shelxcde = os.path.join(__location__, "util/simple_xia2_to_shelxcde_new.py")
 
     command = [shelxcde,
                  '--xia2dir=%s' %(pdb_dir),
                  '--name=%s' %(pdb_id),
                  '--atom=Se',
-                 '--seqin=%s' %(seq)]
+                 '--seqin=%s' %(seq)
+                 ]
 
     print(' '.join(command))
     logging.info(f"{command}")

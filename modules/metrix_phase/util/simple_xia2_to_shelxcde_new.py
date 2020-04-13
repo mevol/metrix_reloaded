@@ -32,7 +32,7 @@ NTRY {10}
 """
     fmt = (label,) + (sca,) + cell_round + (sg,) + (find,) + (ntry,)
     keywords = keywords_shelxc.format(*fmt)
-    print(keywords)
+#    print(keywords)
 
     result = procrunner.run(["shelxc", name],
                             stdin=keywords.encode("utf-8"),
@@ -44,10 +44,8 @@ def simpleSHELXD(name):
 
   print("SHELXD")
   print("======")
-  print("&&&&&&&&", name)
   # check required file exists
   fa = name + '_fa'
-  print(55555555, fa)
   if not os.path.exists(fa + '.ins'):
     raise RuntimeError('Could not find {0}'.format(fa + '.ins'))
   else:
@@ -57,7 +55,6 @@ def simpleSHELXD(name):
     with open('%s.ins' %fa, 'w') as f:
       f.write(s)
     f.close()
-    print(fa)
   
   keywords = fa  
   result = procrunner.run(["shelxd", fa],
@@ -66,8 +63,81 @@ def simpleSHELXD(name):
 
   return result
   
-def simpleSHELXE(name, solvent_frac=0.5, inverse_hand=False):
-  return
+def simpleSHELXE(name, find, solvent_frac=0.5, inverse_hand=False):
+  fa = name + '_fa'
+  
+  if not inverse_hand:
+    keywords_shelxe = '''{0} {1} -s{2} -m -h{3} -z{3} -a5 -q'''
+    keywords = keywords_shelxe.format(name, fa, solvent_frac, find)
+    print(keywords)
+    
+    result = procrunner.run(["shelxe"],
+                          stdin=keywords.encode("utf-8"),
+                          print_stdout=True)  
+
+  
+  if inverse_hand:
+    keywords_shelxe = '''{0} {1} -s{2} -m -h{3} -z{3} -a5 -q -i'''
+    keywords = keywords_shelxe.format(name, fa, solvent_frac, find)    
+    print(keywords)
+
+    result = procrunner.run(["shelxe"],
+                          stdin=keywords.encode("utf-8"),
+                          print_stdout=True)  
+  
+  msg = "SHELXE - {0} hand"
+  if inverse_hand:
+    msg = msg.format("inverse")
+  else:
+    msg = msg.format("original")
+  print(msg)
+  print("=" * len(msg))
+
+  # check required files exist
+  if not os.path.exists(fa + '.ins'):
+    raise RuntimeError('Could not find {0}'.format(fa + '.ins'))
+    
+#  result = procrunner.run(["shelxe"],
+#                          stdin=keywords.encode("utf-8"),
+#                          print_stdout=True)  
+  return result
+
+  #fix to use newer shelxe; use line below when CCP4 has been updated
+#  cmd = "/dls_sw/apps/shelx/64/2017-1/shelxe {0} {1} -s{2} -m200 -h{3} -z{3} -e1".format(name, fa, solvent_frac, find)
+  #below is original line which is not used for this run
+  #cmd = "/dls_sw/apps/shelx/64/2017-1/shelxe {0} {1} -s{2} -m -h{3} -z{3} -a5 -q".format(name, fa, solvent_frac, find)
+  #cmd = "shelxe {0} {1} -s{2} -m0 -h{3} -z{3} ".format(name, fa, solvent_frac, find)#NO solvent and initial phases
+  #cmd = "shelxe {0} {1} -s{2} -h{3} -z{3} ".format(name, fa, solvent_frac, find)#solvent and initial phases
+  #cmd = "shelxe {0} {1} -s{2} -m20 -h{3} -z{3} ".format(name, fa, solvent_frac, find)#solvent flattening
+  #cmd = "shelxe {0} {1} -s{2} -m200 -h{3} -z{3} ".format(name, fa, solvent_frac, find)#more solvent flattening
+  #cmd = "shelxe {0} {1} -s{2} -m200 -h{3} -z{3} -e1".format(name, fa, solvent_frac, find)#solvent flattening and free-lunch algorithm
+  
+  
+  #keywords_shelxe = '''{0} {1} -s{2} -m -h{3} -z{3} -a5 -q'''
+  
+#  fa = name + '_fa'
+  
+  #keywords = keywords_shelxe.format(name, fa, solvent_frac, find)
+  
+  #cmd = 
+  
+#  cmd = "shelxe {0} {1} -s{2} -m -h{3} -z{3} -a5 -q".format(name, fa, solvent_frac, find)
+#  if inverse_hand: cmd += " -i"
+#
+#  msg = "SHELXE - {0} hand"
+#  if inverse_hand:
+#    msg = msg.format("inverse")
+#  else:
+#    msg = msg.format("original")
+#  print(msg)
+#  print("=" * len(msg))
+#
+#  # check required files exist
+#  if not os.path.exists(fa + '.ins'):
+#    raise RuntimeError('Could not find {0}'.format(fa + '.ins'))
+#    
+#  result = procrunner.run(["shelxe"], stdin=cmd.encode("utf-8"), print_stdout=False)  
+#  return result
 
 def copy_sca_locally(wavelengths):
   '''Copy .sca files locally to work around problem at DLS where SHELX fails
@@ -89,6 +159,7 @@ if __name__ == '__main__':
   parser.add_argument('--seqin', help='name of input sequence file')
   parser.add_argument('--atom', help="heavy atom (default to 'Se')")
   parser.add_argument('--ntry', help="override ntry for SHELX (default 1000)")
+  parser.add_argument('--type', help="override SHELXE type (default 'trace')")
   args = parser.parse_args()
 
   if args.name is None:
@@ -125,13 +196,8 @@ if __name__ == '__main__':
 ########################################################################
 
   # determine spacegroups for pointgroup
-  print(33333333, xia2_dat.sg_name)
-  #gemmi_sg = gemmi.SpaceGroup(x2_dat.sg_name)
-  #print(gemmi_sg)
   space_groups = generate(gemmi.SpaceGroup(xia2_dat.sg_name))
   
-  print(77777777, space_groups)
-
 ########################################################################
 ###  copy SCA file locally
 ########################################################################
@@ -159,7 +225,6 @@ if __name__ == '__main__':
 
   # Find scaled mtz
   scaled_mtz = xia2_dat.scaled_mtz
-  print(11111111, scaled_mtz)
 
 ########################################################################
 ###  use Matthews coefficient and sequence to get number of sites
@@ -213,36 +278,96 @@ if __name__ == '__main__':
     sg_str = "".join(sg_str.split())
     print("Trying {0} \n".format(sg_str))
     os.chdir(cwd)
-    if not os.path.exists(sg_str): os.mkdir(sg_str)
+    if "(" in sg_str:
+      pass
+    else:
+      if not os.path.exists(sg_str):
+        os.mkdir(sg_str)
 
-    print("********", os.getcwd())
+      print("********", os.getcwd())
     
-    os.chdir(sg_str)
+      os.chdir(sg_str)
     
-    print("new working dir", os.getcwd())
+      print("new working dir", os.getcwd())
 
 ########################################################################
-###  run shelx functions
+###  run shelx C and D functions
 ########################################################################
 
-    # Run SHELXC
-    c_output.append(simpleSHELXC(args.name,
-                                 xia2_dat.cell,
-                                 wl,
-                                 sg_str,
-                                 find,
-                                 args.ntry))
+      # Run SHELXC
+      c_output.append(simpleSHELXC(args.name,
+                                   xia2_dat.cell,
+                                   wl,
+                                   sg_str,
+                                   find,
+                                   args.ntry))
       
-    #print(c_output)
+      #print(c_output)
 
-    # Run SHELXD
-    d_output = simpleSHELXD(args.name)
+      # Run SHELXD
+      d_output = simpleSHELXD(args.name)
     
-    # Get CFOM from .res
-    try:
-      with open(args.name + '_fa.res') as f:
-        cfom.append(float(f.readline().split()[-1]))
-    except IOError:
-      cfom.append(0)
+      # Get CFOM from .res
+      print("********", os.getcwd())
+      try:
+        with open(args.name + '_fa.res', "r") as f:
+          for line in f:
+            if "SHELXD" in line:
+              print(11111111, line)
+              print(22222222, line.split()[-1])
+              cfom.append(float(line.split()[-1]))
+#      print(4444444, cfom)
+      except IOError:
+        cfom.append(0)
+#    print(cfom)
+#    print(c_output)
+    os.chdir(cwd)
 
-  os.chdir(cwd)
+  best_idx = cfom.index(max(cfom))
+  print("Best index", best_idx)
+  best_sg = str(space_groups[best_idx]).strip('<gemmi.SpaceGroup("')
+  best_sg = str(best_sg).strip('")>')
+  best_sg = "".join(best_sg.split())
+  print("Best sg", best_sg)
+  print("Best space group: %s with CFOM=%s" %(str(best_sg),
+                                              str(cfom[best_idx])))
+  print(c_output[best_idx])
+  c_output = c_output[best_idx]
+  for line in c_output:
+    if line.startswith(' Resl'): print(line)
+    if line.startswith(' <d"/sig>'): print(line)
+    if line.startswith(' CC(1/2)'): print(line)
+  
+  os.chdir(best_sg)
+  print("********", os.getcwd())
+
+########################################################################
+###  run shelx E functions for best_sg
+########################################################################
+
+  # Run SHELXE
+  solvent_frac = 0.5 if matt_coeff is None else matt_coeff.solvent_fraction(
+    matt_coeff.num_molecules())
+    
+  # original hand  
+  e_output_ori = simpleSHELXE(args.name,
+                              find,
+                              solvent_frac)
+  try:
+    with open(args.name + '.lst') as f:
+      for line in f.readlines():
+        if line.startswith('Best trace'): print(line)
+  except IOError:
+    pass
+  
+  # inverse hand
+  e_output_inv = simpleSHELXE(args.name,
+                              find,
+                              solvent_frac,
+                              inverse_hand=True)
+  try:
+    with open(args.name + '_i.lst') as f:
+      for line in f.readlines():
+        if line.startswith('Best trace'): print(line)
+  except IOError:
+    pass
