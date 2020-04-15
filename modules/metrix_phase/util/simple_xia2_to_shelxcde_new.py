@@ -13,7 +13,7 @@ from mtz_data_object import MtzData
 from seq_data_object import SeqData
 from matth_coeff_function_object import MattCoeff, matt_coeff_factory
 from generate_possible_spacegroups import generate  
-
+from multiprocessing import Pool, Process
 
 def simpleSHELXC(name, cell, wavelengths, sg, find, ntry=1000):
   print("SHELXC")
@@ -56,33 +56,31 @@ def simpleSHELXD(name):
       f.write(s)
     f.close()
   
-  keywords = fa  
   result = procrunner.run(["shelxd", fa],
-                          #stdin=keywords.encode("utf-8"),
                           print_stdout=False)
 
   return result
   
 def simpleSHELXE(name, find, solvent_frac=0.5, inverse_hand=False):
   fa = name + '_fa'
+
+  print(name)
+  print(fa)
+  print(solvent_frac)
+  print(find)
+  solvent = "-s{0}".format(str(solvent_frac))
+  print(solvent)
+  h_value = "-h{0}".format(find)
+  print(h_value)
+  z_value = "-z{0}".format(find)
+  print(z_value)
   
-  if not inverse_hand:
-    keywords_shelxe = '''{0} {1} -s{2} -m -h{3} -z{3} -a5 -q'''
-    keywords = keywords_shelxe.format(name, fa, solvent_frac, find)
-    print(keywords)
-    
-    result = procrunner.run(["shelxe"],
-                          stdin=keywords.encode("utf-8"),
+  if not inverse_hand:  
+    result = procrunner.run(["shelxe", name, fa, solvent, h_value, z_value, "-a5", "-q"],
                           print_stdout=True)  
-
-  
+    
   if inverse_hand:
-    keywords_shelxe = '''{0} {1} -s{2} -m -h{3} -z{3} -a5 -q -i'''
-    keywords = keywords_shelxe.format(name, fa, solvent_frac, find)    
-    print(keywords)
-
-    result = procrunner.run(["shelxe"],
-                          stdin=keywords.encode("utf-8"),
+    result = procrunner.run(["shelxe", name, fa, solvent, h_value, z_value, "-a5", "-q", "-i"],
                           print_stdout=True)  
   
   msg = "SHELXE - {0} hand"
@@ -97,9 +95,6 @@ def simpleSHELXE(name, find, solvent_frac=0.5, inverse_hand=False):
   if not os.path.exists(fa + '.ins'):
     raise RuntimeError('Could not find {0}'.format(fa + '.ins'))
     
-#  result = procrunner.run(["shelxe"],
-#                          stdin=keywords.encode("utf-8"),
-#                          print_stdout=True)  
   return result
 
   #fix to use newer shelxe; use line below when CCP4 has been updated
@@ -353,6 +348,7 @@ if __name__ == '__main__':
   e_output_ori = simpleSHELXE(args.name,
                               find,
                               solvent_frac)
+                              
   try:
     with open(args.name + '.lst') as f:
       for line in f.readlines():
@@ -365,9 +361,11 @@ if __name__ == '__main__':
                               find,
                               solvent_frac,
                               inverse_hand=True)
+                              
   try:
     with open(args.name + '_i.lst') as f:
       for line in f.readlines():
         if line.startswith('Best trace'): print(line)
   except IOError:
     pass
+
