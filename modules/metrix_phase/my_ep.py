@@ -11,6 +11,8 @@ import datetime
 import argparse
 import procrunner
 import logging
+import pickle
+import traceback
 from multiprocessing import Pool
 from pathlib import Path
 
@@ -47,9 +49,9 @@ def parse_command_line():
     help='Specify output directory')
 
 #  parser.add_argument(
-#    '--shelxe',
+#    '--type',
 #    type=str,
-#    dest='shelxe',
+#    dest='type',
 #    default='',
 #    help='SHELXE type to run')
 
@@ -118,12 +120,22 @@ class ExperimentalPhasing(object):
                  '--xia2dir=%s' %(pdb_dir),
                  '--name=%s' %(pdb_id),
                  '--atom=Se',
-                 '--seqin=%s' %(seq)
+                 '--seqin=%s' %(seq),
+                 '--type=trace'
                  ]
 
     print(' '.join(command))
     logging.info(f"{command}")
     result = procrunner.run(command)
+
+    if result is not None:
+        with open('simple_xia2_to_shelxcde.log', 'w') as f:
+          f.writelines(result.stdout_lines)
+          f.write('\n')
+#    except Exception:
+#      pickle.dump((e, traceback.format_exc()), open("%s_error.pickle" % pdb_id, "w"))
+
+
 
 ###############################################################################
 #
